@@ -17,18 +17,18 @@
 
   # Filesystems - example configuration
   fileSystems."/" = {
-    device = "/dev/disk/by-uuid/REPLACE-WITH-ACTUAL-UUID";
+    device = "/dev/disk/by-uuid/TEMPLATE-UUID"; # WARNING: Replace TEMPLATE-UUID with actual UUID from hardware scan
     fsType = "ext4";
   };
 
   fileSystems."/boot" = {
-    device = "/dev/disk/by-uuid/REPLACE-WITH-ACTUAL-BOOT-UUID";
+    device = "/dev/disk/by-uuid/TEMPLATE-BOOT-UUID"; # WARNING: Replace TEMPLATE-BOOT-UUID with actual UUID from hardware scan
     fsType = "vfat";
   };
 
   # Swap - adjust as needed
   swapDevices = [
-    { device = "/dev/disk/by-uuid/REPLACE-WITH-ACTUAL-SWAP-UUID"; }
+    { device = "/dev/disk/by-uuid/TEMPLATE-SWAP-UUID"; } # WARNING: Replace TEMPLATE-SWAP-UUID with actual UUID from hardware scan
   ];
 
   # Enable CPU microcode updates
