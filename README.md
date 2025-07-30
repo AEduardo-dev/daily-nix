@@ -81,12 +81,17 @@ A comprehensive NixOS configuration for development workstations with GNOME desk
    - System features (gaming, development, desktop)
    - SOPS options
 
-5. **Apply the configuration**:
+6. **Validate configuration** (optional):
+   ```bash
+   ./validate-config.sh
+   ```
+
+7. **Apply the configuration**:
    ```bash
    sudo nixos-rebuild switch --flake .#desktop
    ```
 
-6. **Apply home-manager configuration** (after reboot):
+8. **Apply home-manager configuration** (after reboot):
    ```bash
    home-manager switch --flake .#user@desktop
    ```
