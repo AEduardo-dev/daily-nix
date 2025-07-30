@@ -137,7 +137,10 @@
       enableSSHSupport = true;
       pinentryFlavor = "gtk2";
     };
-    
+  };
+
+  # Networking configuration
+  networking = {
     # Enable firewall
     firewall = {
       enable = true;
