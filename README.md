@@ -42,7 +42,7 @@ A comprehensive NixOS configuration for development workstations with GNOME desk
 
 1. **NixOS Installation**: Ensure you have NixOS installed with flakes enabled
 2. **Hardware Configuration**: Generate your hardware configuration
-3. **Age Key**: Generate an age key for SOPS (optional)
+3. **Age Key**: Generate an age key for SOPS secrets management
 
 ### Installation
 
@@ -57,17 +57,23 @@ A comprehensive NixOS configuration for development workstations with GNOME desk
    sudo nixos-generate-config --show-hardware-config > hosts/desktop/hardware-configuration.nix
    ```
 
-3. **Customize user settings**:
-   Edit `users/default.nix` and update:
-   - Username (change from "user" to your desired username)
-   - Git configuration (name, email)
-   - SSH keys
-   - Initial password
-
-4. **Update flake inputs** (optional):
+3. **Set up SOPS secrets** (required for user password):
    ```bash
-   nix flake update
+   # Generate age key
+   mkdir -p ~/.config/sops/age
+   age-keygen -o ~/.config/sops/age/keys.txt
+   
+   # Update .sops.yaml with your public key (from keys.txt)
+   # Edit secrets/secrets.yaml with your encrypted secrets
+   sops secrets/secrets.yaml
    ```
+
+4. **Customize configuration**:
+   All main configuration options are centralized in `configuration.nix`. Edit this file to:
+   - Set username, real name, and email
+   - Configure LazyVim git repository (optional)
+   - Enable/disable features (gaming, development, desktop)
+   - Set SOPS options
 
 5. **Apply the configuration**:
    ```bash
@@ -79,33 +85,81 @@ A comprehensive NixOS configuration for development workstations with GNOME desk
    home-manager switch --flake .#user@desktop
    ```
 
+### LazyVim Configuration from Git Repository
+
+You can specify a git repository containing your LazyVim configuration in `configuration.nix`:
+
+```nix
+dailyNix.neovim.lazyvimConfigRepo = "https://github.com/yourusername/your-lazyvim-config.git";
+```
+
+This will automatically clone and update your custom LazyVim configuration.
+
 ## Configuration Structure
 
 ```
-├── flake.nix                 # Main flake configuration
+├── configuration.nix          # 🎯 MAIN CONFIGURATION HUB - Edit this file first!
+├── flake.nix                  # Flake configuration with inputs
 ├── hosts/
 │   └── desktop/
-│       ├── default.nix       # Desktop host configuration
+│       ├── default.nix        # Desktop host configuration
 │       └── hardware-configuration.nix
 ├── modules/
 │   ├── system/
-│   │   ├── desktop.nix       # GNOME desktop environment
-│   │   ├── development.nix   # Development tools and services
-│   │   ├── gaming.nix        # Gaming applications and optimizations
-│   │   └── security.nix      # Security hardening and SOPS
+│   │   ├── desktop.nix        # GNOME desktop environment
+│   │   ├── development.nix    # Development tools and services
+│   │   ├── gaming.nix         # Gaming applications (Discord only)
+│   │   └── security.nix       # Security hardening and SOPS
 │   └── home/
-│       ├── neovim.nix        # Neovim with LazyVim configuration
-│       ├── development.nix   # Development tools for home-manager
-│       └── desktop.nix       # Desktop applications and theming
+│       ├── neovim.nix         # Neovim with LazyVim + git repo support
+│       ├── development.nix    # Development tools for home-manager
+│       └── desktop.nix        # Desktop applications and theming
 ├── users/
-│   ├── default.nix           # User configuration
-│   └── home.nix              # Standalone home-manager config
+│   ├── default.nix            # User configuration (uses SOPS secrets)
+│   └── home.nix               # Standalone home-manager config
 └── secrets/
-    ├── .sops.yaml            # SOPS configuration
-    └── secrets.yaml          # Encrypted secrets (example)
+    ├── .sops.yaml             # SOPS configuration
+    └── secrets.yaml           # Encrypted secrets (including user password)
 ```
 
+### Centralized Configuration
+
+The `configuration.nix` file is your main configuration hub where you can:
+- Set user details (name, email, real name)
+- Configure LazyVim git repository for custom configurations
+- Enable/disable system features (gaming, development, desktop)
+- Configure secrets management options
+
+All other files are organized by function and imported automatically.
+
 ## Customization Guide
+
+### Centralized Configuration
+
+Most configuration options are available in `configuration.nix`:
+
+```nix
+dailyNix = {
+  user = {
+    name = "yourusername";
+    realName = "Your Real Name";
+    email = "your.email@example.com";
+  };
+  
+  neovim.lazyvimConfigRepo = "https://github.com/yourusername/lazyvim-config.git";
+  
+  features = {
+    gaming = true;      # Enable gaming applications
+    development = true; # Enable development tools
+    desktop = true;     # Enable GNOME desktop
+  };
+  
+  secrets = {
+    useSOPS = true;
+    ageKeyFile = "/home/yourusername/.config/sops/age/keys.txt";
+  };
+};
+```
 
 ### Adding a New Host
 
@@ -125,56 +179,54 @@ A comprehensive NixOS configuration for development workstations with GNOME desk
    };
    ```
 
-### Modifying Development Tools
+### Custom LazyVim Configuration
 
-Edit `modules/system/development.nix` or `modules/home/development.nix` to:
-- Add new programming languages
-- Install additional development tools
-- Configure language-specific tools
+To use your own LazyVim configuration from a git repository:
 
-### Gaming Configuration
+1. Set the repository URL in `configuration.nix`:
+   ```nix
+   dailyNix.neovim.lazyvimConfigRepo = "https://github.com/yourusername/your-lazyvim-config.git";
+   ```
 
-Modify `modules/system/gaming.nix` to:
-- Add new gaming platforms
-- Configure graphics drivers (NVIDIA/AMD)
-- Adjust performance settings
+2. The configuration will be cloned to `~/.config/nvim-custom`
+3. Updates will be pulled automatically on home-manager switches
 
-### Desktop Customization
+## SOPS Secrets Management (Required)
 
-Edit `modules/home/desktop.nix` to:
-- Change GTK/Qt themes
-- Modify GNOME settings
-- Add new desktop applications
+This configuration uses SOPS for secure secrets management. **SOPS setup is required** for the user password and other sensitive data.
 
-## SOPS Secrets Management
+### Required Setup
 
-### Setup
-
-1. **Generate an age key**:
+1. **Generate an age key** (required for user password):
    ```bash
    mkdir -p ~/.config/sops/age
    age-keygen -o ~/.config/sops/age/keys.txt
    ```
 
-2. **Update `.sops.yaml`** with your public key
+2. **Update `.sops.yaml`** with your public key from the generated keys.txt file
 
-3. **Create/edit secrets**:
+3. **Create encrypted secrets** (required for user password):
    ```bash
    sops secrets/secrets.yaml
    ```
 
+4. **Add your user password hash**:
+   ```bash
+   # Generate password hash
+   mkpasswd -m sha-512
+   
+   # Add the hash to secrets.yaml under "user-password"
+   ```
+
+### Secrets Already Configured
+
+The following secrets are already configured in the system:
+- `user-password`: Used for the main user login (required)
+- Additional secrets can be added to `secrets/secrets.yaml`
+
 ### Using Secrets
 
-Reference secrets in your configuration:
-```nix
-sops.secrets."user-password" = {
-  neededForUsers = true;
-};
-
-users.users.user = {
-  hashedPasswordFile = config.sops.secrets."user-password".path;
-};
-```
+Secrets are automatically available to the system through SOPS configuration. The user password is automatically applied during system build.
 
 ## Troubleshooting
 

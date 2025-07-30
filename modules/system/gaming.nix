@@ -46,8 +46,6 @@
     
     # Communication for gaming
     discord
-    teamspeak_client
-    mumble
     
     # Game recording and streaming
     obs-studio

@@ -1,9 +1,25 @@
 # Neovim Configuration with LazyVim setup
 { config, lib, pkgs, inputs, ... }:
 
+let
+  # Option to specify a git repository for LazyVim config
+  lazyvimConfigRepo = lib.mkOption {
+    type = lib.types.nullOr lib.types.str;
+    default = null;
+    description = "Git repository URL to clone for custom LazyVim configuration";
+    example = "https://github.com/username/lazyvim-config.git";
+  };
+in
 {
-  programs.nixvim = {
-    enable = true;
+  options = {
+    programs.neovim-custom = {
+      lazyvimConfigRepo = lazyvimConfigRepo;
+    };
+  };
+
+  config = {
+    programs.nixvim = {
+      enable = true;
     
     # Use the latest neovim
     package = pkgs.neovim-unwrapped;
@@ -598,20 +614,37 @@
     '';
   };
 
-  # Additional packages for development
-  home.packages = with pkgs; [
-    # Language servers and tools that nixvim might need
-    stylua
-    black
-    prettier
-    alejandra
-    rustfmt
-    
-    # Additional development tools
-    ripgrep
-    fd
-    
-    # Terminal multiplexer
-    tmux
-  ];
+    # Additional packages for development
+    home.packages = with pkgs; [
+      # Language servers and tools that nixvim might need
+      stylua
+      black
+      prettier
+      alejandra
+      rustfmt
+      
+      # Additional development tools
+      ripgrep
+      fd
+      
+      # Terminal multiplexer
+      tmux
+    ];
+
+    # LazyVim git repository cloning activation
+    home.activation = lib.mkIf (config.programs.neovim-custom.lazyvimConfigRepo != null) {
+      cloneLazyvimConfig = lib.hm.dag.entryAfter ["writeBoundary"] ''
+        LAZYVIM_CONFIG_DIR="$HOME/.config/nvim-custom"
+        REPO_URL="${config.programs.neovim-custom.lazyvimConfigRepo}"
+        
+        if [ ! -d "$LAZYVIM_CONFIG_DIR" ] && [ -n "$REPO_URL" ]; then
+          echo "Cloning LazyVim configuration from $REPO_URL"
+          ${pkgs.git}/bin/git clone "$REPO_URL" "$LAZYVIM_CONFIG_DIR"
+        elif [ -d "$LAZYVIM_CONFIG_DIR" ] && [ -n "$REPO_URL" ]; then
+          echo "Updating LazyVim configuration in $LAZYVIM_CONFIG_DIR"
+          cd "$LAZYVIM_CONFIG_DIR" && ${pkgs.git}/bin/git pull
+        fi
+      '';
+    };
+  };
 }
