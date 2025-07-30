@@ -12,7 +12,7 @@ A comprehensive NixOS configuration for development workstations with GNOME desk
 
 ### 🛠️ Development Environment
 - **Neovim with LazyVim**: Fully configured with LSP, syntax highlighting, and modern plugins
-- **Programming Languages**: Python, Rust, Go, Node.js, Java, .NET, C/C++
+- **Development Tools**: Support for multiple programming languages and frameworks
 - **Containerization**: Docker and Podman with rootless support
 - **Database Tools**: PostgreSQL, Redis, MongoDB tools
 - **Cloud Tools**: kubectl, terraform, ansible, AWS CLI, etc.
@@ -69,11 +69,17 @@ A comprehensive NixOS configuration for development workstations with GNOME desk
    ```
 
 4. **Customize configuration**:
-   All main configuration options are centralized in `configuration.nix`. Edit this file to:
-   - Set username, real name, and email
-   - Configure LazyVim git repository (optional)
-   - Enable/disable features (gaming, development, desktop)
-   - Set SOPS options
+   Copy the example configuration and customize it:
+   ```bash
+   cp configuration.example.nix configuration.nix
+   # Edit configuration.nix to set your username, email, and preferences
+   ```
+   
+   All main configuration options are centralized in `configuration.nix`. This file controls:
+   - User details (username, real name, email)
+   - LazyVim git repository (optional)
+   - System features (gaming, development, desktop)
+   - SOPS options
 
 5. **Apply the configuration**:
    ```bash

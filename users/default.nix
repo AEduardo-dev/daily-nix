@@ -3,7 +3,7 @@
 
 {
   # Define users
-  users.users.user = {
+  users.users.${config.dailyNix.user.name} = {
     isNormalUser = true;
     description = "Main User";
     shell = pkgs.zsh;
@@ -36,7 +36,7 @@
   };
 
   # Home Manager configuration for the user
-  home-manager.users.user = { pkgs, ... }: {
+  home-manager.users.${config.dailyNix.user.name} = { pkgs, ... }: {
     imports = [
       ../../modules/home/neovim.nix
       ../../modules/home/development.nix
@@ -45,8 +45,8 @@
 
     # Home Manager settings
     home = {
-      username = "user";
-      homeDirectory = "/home/user";
+      username = config.dailyNix.user.name;
+      homeDirectory = "/home/${config.dailyNix.user.name}";
       stateVersion = "23.11";
     };
 
@@ -100,8 +100,8 @@
     # Git configuration
     programs.git = {
       enable = true;
-      userName = "Your Name";
-      userEmail = "your.email@example.com";
+      userName = config.dailyNix.user.realName or "Your Name";
+      userEmail = config.dailyNix.user.email or "your.email@example.com";
       
       extraConfig = {
         init.defaultBranch = "main";

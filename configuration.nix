@@ -82,6 +82,19 @@
 
   # Apply the configuration based on options
   config = {
+    # Set default configuration values
+    dailyNix = {
+      user.name = lib.mkDefault "user";
+      user.realName = lib.mkDefault "Main User";
+      user.email = lib.mkDefault "your.email@example.com";
+      neovim.lazyvimConfigRepo = lib.mkDefault null;
+      features.gaming = lib.mkDefault true;
+      features.development = lib.mkDefault true;
+      features.desktop = lib.mkDefault true;
+      secrets.useSOPS = lib.mkDefault true;
+      secrets.ageKeyFile = lib.mkDefault "/home/${config.dailyNix.user.name}/.config/sops/age/keys.txt";
+    };
+    
     # Pass configuration to other modules
     home-manager.users.${config.dailyNix.user.name} = {
       programs.neovim-custom.lazyvimConfigRepo = config.dailyNix.neovim.lazyvimConfigRepo;
