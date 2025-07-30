@@ -4,3 +4,25 @@ result-*
 
 # Ignore automatically generated direnv output
 .direnv
+
+# Ignore direnv config (contains system-specific paths)
+.envrc
+
+# Ignore backup files
+*.backup
+*.bak
+*~
+
+# Ignore editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore temporary files
+*.tmp
+*.temp
