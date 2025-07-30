@@ -32,7 +32,8 @@
         inherit system;
         specialArgs = { inherit inputs; };
         modules = [
-          ./hosts/${hostname}
+          ./configuration.nix  # Centralized configuration hub
+          ./hosts/${hostname}  # Host-specific configuration
           sops-nix.nixosModules.sops
           home-manager.nixosModules.home-manager
           {

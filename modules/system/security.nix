@@ -10,16 +10,17 @@
     # Age key configuration
     age.keyFile = "/home/user/.config/sops/age/keys.txt";
     
-    # Example secrets - uncomment and configure as needed
-    # secrets = {
-    #   "user-password" = {
-    #     neededForUsers = true;
-    #   };
-    #   "wifi-password" = {};
-    #   "github-token" = {
-    #     owner = config.users.users.user.name;
-    #   };
-    # };
+    # Secrets configuration
+    secrets = {
+      "user-password" = {
+        neededForUsers = true;
+      };
+      # Additional secrets can be added here as needed
+      # "wifi-password" = {};
+      # "github-token" = {
+      #   owner = config.users.users.user.name;
+      # };
+    };
   };
 
   # Security packages

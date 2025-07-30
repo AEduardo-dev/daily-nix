@@ -23,11 +23,11 @@
       "input"          # input devices
     ];
     
-    # Set user password (use sops for production)
-    # hashedPassword = config.sops.secrets.user-password.path;
+    # Set user password using SOPS secret
+    hashedPasswordFile = config.sops.secrets."user-password".path;
     
-    # For initial setup, you can set a temporary password
-    initialPassword = "changeme";
+    # Commented out for security - use SOPS secret above
+    # initialPassword = "changeme";
     
     # SSH keys (replace with your actual public keys)
     openssh.authorizedKeys.keys = [
