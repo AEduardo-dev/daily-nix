@@ -642,7 +642,7 @@ in
           ${pkgs.git}/bin/git clone "$REPO_URL" "$LAZYVIM_CONFIG_DIR"
         elif [ -d "$LAZYVIM_CONFIG_DIR" ] && [ -n "$REPO_URL" ]; then
           echo "Updating LazyVim configuration in $LAZYVIM_CONFIG_DIR"
-          cd "$LAZYVIM_CONFIG_DIR" && ${pkgs.git}/bin/git pull
+          cd "$LAZYVIM_CONFIG_DIR" && ${pkgs.git}/bin/git pull --ff-only || echo "Error: Failed to update LazyVim configuration in $LAZYVIM_CONFIG_DIR" >&2
         fi
       '';
     };
