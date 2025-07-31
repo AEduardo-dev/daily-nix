@@ -8,7 +8,7 @@
     defaultSopsFormat = "yaml";
     
     # Age key configuration
-    age.keyFile = "/home/user/.config/sops/age/keys.txt";
+    age.keyFile = "/home/${config.dailyNix.user.name}/.config/sops/age/keys.txt";
     
     # Secrets configuration
     secrets = {
