@@ -32,12 +32,14 @@ fi
 echo "✅ secrets.yaml found"
 
 # Check if hardware configuration exists
-if [ ! -f "hosts/desktop/hardware-configuration.nix" ]; then
-    echo "❌ Hardware configuration not found!"
-    echo "   Please run: sudo nixos-generate-config --show-hardware-config > hosts/desktop/hardware-configuration.nix"
+HOSTNAME=${1:-$(hostname)}
+HARDWARE_CONFIG_PATH="hosts/$HOSTNAME/hardware-configuration.nix"
+if [ ! -f "$HARDWARE_CONFIG_PATH" ]; then
+    echo "❌ Hardware configuration not found at $HARDWARE_CONFIG_PATH!"
+    echo "   Please run: sudo nixos-generate-config --show-hardware-config > $HARDWARE_CONFIG_PATH"
     exit 1
 fi
-echo "✅ Hardware configuration found"
+echo "✅ Hardware configuration found at $HARDWARE_CONFIG_PATH"
 
 # Check if age key directory exists (warn only)
 if [ ! -d "$HOME/.config/sops/age" ]; then
