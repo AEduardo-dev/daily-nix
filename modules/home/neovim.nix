@@ -13,7 +13,13 @@ in
 {
   options = {
     programs.neovim-custom = {
-      lazyvimConfigRepo = lazyvimConfigRepo;
+      # Option to specify a git repository for LazyVim config
+      lazyvimConfigRepo = lib.mkOption {
+        type = lib.types.nullOr lib.types.str;
+        default = null;
+        description = "Git repository URL to clone for custom LazyVim configuration";
+        example = "https://github.com/username/lazyvim-config.git";
+      };
     };
   };
 
