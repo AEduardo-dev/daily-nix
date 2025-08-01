@@ -34,6 +34,88 @@ BRANCH="minimal-flakes-setup"
 CONFIG_DIR="/tmp/minimal-nixos-config"
 TARGET_DIR="/etc/nixos"
 
+# Command line options
+AUTO_YES=false
+QUIET=false
+NO_REBOOT=false
+
+# Parse command line arguments
+parse_args() {
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            -y|--yes)
+                AUTO_YES=true
+                shift
+                ;;
+            -q|--quiet)
+                QUIET=true
+                shift
+                ;;
+            --no-reboot)
+                NO_REBOOT=true
+                shift
+                ;;
+            -h|--help)
+                show_usage
+                exit 0
+                ;;
+            *)
+                log_error "Unknown option: $1"
+                show_usage
+                exit 1
+                ;;
+        esac
+    done
+}
+
+# Show usage information
+show_usage() {
+    echo "Usage: $0 [OPTIONS]"
+    echo
+    echo "Options:"
+    echo "  -y, --yes           Auto-accept defaults where possible"
+    echo "  -q, --quiet         Reduce output verbosity"
+    echo "  --no-reboot         Don't prompt for reboot at end"
+    echo "  -h, --help          Show this help message"
+    echo
+    echo "Environment variables:"
+    echo "  USERNAME            Desired username"
+    echo "  FULLNAME            Full name for user"
+    echo "  EMAIL               Email address"
+    echo "  HOSTNAME            System hostname"
+    echo "  SYSTEM_TYPE         1=Desktop, 2=Server, 3=Minimal (default: 1)"
+    echo "  PASSWORD            User password"
+    echo
+    echo "Example:"
+    echo "  USERNAME=myuser EMAIL=me@example.com $0 -y"
+    echo
+}
+
+# Function to prompt for user input
+prompt_user() {
+    local prompt="$1"
+    local default="$2"
+    local var_name="$3"
+    
+    # Check if variable is already set (from environment)
+    local current_value
+    eval "current_value=\$$var_name"
+    
+    if [ -n "$current_value" ]; then
+        log_info "$prompt: Using provided value '$current_value'"
+        return
+    fi
+    
+    if [ "$AUTO_YES" = true ] && [ -n "$default" ]; then
+        log_info "$prompt: Using default value '$default'"
+        eval "$var_name=\"$default\""
+        return
+    fi
+    
+    read -p "$prompt [$default]: " input
+    eval "$var_name=\"${input:-$default}\""
+}
+
 # Function to check prerequisites
 check_prerequisites() {
     log_info "Checking prerequisites..."
@@ -378,6 +460,9 @@ main() {
     echo ""
     log_info "🚀 Starting Minimal NixOS Flakes Setup"
     echo ""
+    
+    # Parse command line arguments first
+    parse_args "$@"
     
     check_prerequisites
     gather_user_input
