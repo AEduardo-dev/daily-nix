@@ -1,94 +1,116 @@
 {
-  description = "Daily NixOS configuration with development and gaming setup";
+  description = "Minimal NixOS Flakes Configuration with Home Manager and SOPS";
 
   inputs = {
+    # Main nixpkgs
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    nixpkgs-stable.url = "github:NixOS/nixpkgs/nixos-23.11";
     
+    # Home Manager for user environment management
     home-manager = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     
+    # SOPS for secrets management with SSH keys
     sops-nix = {
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    
-    # For neovim configuration
-    nixvim = {
-      url = "github:nix-community/nixvim";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
   };
 
-  outputs = { self, nixpkgs, nixpkgs-stable, home-manager, sops-nix, nixvim, ... }@inputs:
+  outputs = { self, nixpkgs, home-manager, sops-nix }:
     let
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
       
-      # Helper to create nixos system
-      mkSystem = hostname: nixpkgs.lib.nixosSystem {
+      # Generic host configuration helper
+      mkHost = { hostname, username, system ? "x86_64-linux" }: nixpkgs.lib.nixosSystem {
         inherit system;
-        specialArgs = { inherit inputs; };
+        specialArgs = { inherit hostname username; };
         modules = [
-          ./configuration.nix  # Centralized configuration hub
-          ./hosts/${hostname}  # Host-specific configuration
+          # Import our basic system configuration
+          ./minimal-config/system.nix
+          
+          # SOPS configuration
           sops-nix.nixosModules.sops
+          
+          # Home Manager integration
           home-manager.nixosModules.home-manager
           {
-            home-manager.useGlobalPkgs = true;
-            home-manager.useUserPackages = true;
-            home-manager.extraSpecialArgs = { inherit inputs; };
+            home-manager = {
+              useGlobalPkgs = true;
+              useUserPackages = true;
+              users.${username} = import ./minimal-config/home.nix;
+              extraSpecialArgs = { inherit hostname username; };
+            };
+          }
+          
+          # Hardware configuration (will be generated or detected)
+          ./minimal-config/hardware.nix
+          
+          # Host-specific configuration
+          {
+            networking.hostName = hostname;
+            users.users.${username} = {
+              isNormalUser = true;
+              extraGroups = [ "wheel" "networkmanager" "audio" "video" ];
+              # Password will be set via SOPS
+              hashedPasswordFile = "/run/secrets/user-password";
+            };
           }
         ];
       };
     in
     {
+      # Default system configuration for generic host
       nixosConfigurations = {
-        # Desktop configuration - main development machine
-        desktop = mkSystem "desktop";
-        
-        # You can add more hosts here (laptop, server, etc.)
-        # laptop = mkSystem "laptop";
-      };
-
-      # Home manager configurations (for standalone usage)
-      homeConfigurations = {
-        "user@desktop" = home-manager.lib.homeManagerConfiguration {
-          inherit pkgs;
-          extraSpecialArgs = { inherit inputs; };
-          modules = [
-            ./users/home.nix
-            nixvim.homeManagerModules.nixvim
-          ];
+        # Generic host - can be customized
+        nixos = mkHost {
+          hostname = "nixos";
+          username = "user";
         };
       };
 
-      # Development shell for working with this flake
+      # Standalone Home Manager configuration
+      homeConfigurations = {
+        "user@nixos" = home-manager.lib.homeManagerConfiguration {
+          inherit pkgs;
+          extraSpecialArgs = { hostname = "nixos"; username = "user"; };
+          modules = [ ./minimal-config/home.nix ];
+        };
+      };
+
+      # Development shell for configuration management
       devShells.${system}.default = pkgs.mkShell {
         buildInputs = with pkgs; [
-          nixd                    # Nix language server
-          nixpkgs-fmt            # Nix formatter
-          sops                   # For secrets management
-          age                    # For encryption
-          git                    # Version control
-          alejandra              # Nix formatter alternative
+          sops
+          ssh-to-age  # Convert SSH keys to age keys for SOPS
+          git
+          nix
         ];
         
         shellHook = ''
-          echo "🚀 NixOS Configuration Development Environment"
-          echo "Available tools: nixd, nixpkgs-fmt, sops, age, alejandra"
+          echo "🔧 Minimal NixOS Configuration Development Shell"
+          echo "Available tools: sops, ssh-to-age, git, nix"
           echo ""
-          echo "Useful commands:"
-          echo "  nix flake check                 - Check flake validity"
-          echo "  nixos-rebuild switch --flake .#desktop - Apply desktop config"
-          echo "  home-manager switch --flake .#user@desktop - Apply home config"
+          echo "Quick commands:"
+          echo "  ./setup.sh                      - Run interactive setup"
+          echo "  nix flake check                 - Validate configuration"
+          echo "  sudo nixos-rebuild switch --flake .#nixos - Apply config"
           echo ""
         '';
       };
 
-      # Formatter for 'nix fmt'
-      formatter.${system} = pkgs.alejandra;
+      # Helper for creating custom host configurations
+      lib = {
+        mkHost = mkHost;
+        
+        # Helper to create a new host configuration
+        mkCustomHost = { hostname, username, extraModules ? [] }: mkHost {
+          inherit hostname username;
+        } // {
+          modules = mkHost { inherit hostname username; }.modules ++ extraModules;
+        };
+      };
     };
 }
