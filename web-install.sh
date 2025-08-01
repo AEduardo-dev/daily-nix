@@ -176,19 +176,19 @@ main() {
     echo
     
     # Build command line arguments for setup script
-    local setup_args=""
+    local setup_args=()
     if [ "$QUIET" = true ]; then
-        setup_args="$setup_args -q"
+        setup_args+=("-q")
     fi
     if [ "$AUTO_YES" = true ]; then
-        setup_args="$setup_args -y"
+        setup_args+=("-y")
     fi
     if [ "$NO_REBOOT" = true ]; then
-        setup_args="$setup_args --no-reboot"
+        setup_args+=("--no-reboot")
     fi
     
     # Execute the setup script
-    exec "$setup_script" $setup_args
+    exec "$setup_script" "${setup_args[@]}"
 }
 
 main "$@"
