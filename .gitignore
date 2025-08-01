@@ -26,3 +26,23 @@ Thumbs.db
 # Ignore temporary files
 *.tmp
 *.temp
+
+# Minimal config-specific ignores
+# Secrets (keep encrypted versions only)
+secrets/keys.txt
+secrets/age-keys.txt
+minimal-config/keys.txt
+*.age
+*-temp.yaml
+
+# Hardware configuration (system-specific - uncomment to ignore)
+# minimal-config/hardware.nix
+
+# Personal configuration overrides
+configuration.personal.nix
+
+# Backup files created by setup script
+*.backup.*
+
+# Original configuration files (for comparison)
+flake-original.nix

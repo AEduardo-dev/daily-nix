@@ -1,0 +1,10 @@
+# SOPS configuration using SSH keys
+keys:
+  # SSH host key (ed25519) - will be replaced with actual key during setup
+  - &host_ssh age1234567890abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklm
+
+creation_rules:
+  - path_regex: .*secrets\.yaml$
+    key_groups:
+      - age:
+          - *host_ssh
