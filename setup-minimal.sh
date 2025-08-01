@@ -182,17 +182,19 @@ gather_user_input() {
     # Password
     echo ""
     log_info "Setting up user password..."
+    local password password_confirm
     while true; do
-        read -s -p "Enter password for $USERNAME: " PASSWORD
+        read -s -p "Enter password for $USERNAME: " password
         echo
-        read -s -p "Confirm password: " PASSWORD_CONFIRM
+        read -s -p "Confirm password: " password_confirm
         echo
-        if [ "$PASSWORD" = "$PASSWORD_CONFIRM" ]; then
+        if [ "$password" = "$password_confirm" ]; then
             break
         else
             log_error "Passwords do not match. Please try again."
         fi
     done
+    unset password password_confirm
     
     log_success "Configuration information gathered"
 }
@@ -257,16 +259,18 @@ setup_sops_ssh() {
     log_info "SSH host key converted to age key: $AGE_KEY"
     
     # Update SOPS configuration
-    sed -i "s/age1234567890abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklm/$AGE_KEY/g" \
+    sed -i "s/$AGE_PLACEHOLDER/$AGE_KEY/g" \
         "$CONFIG_DIR/minimal-config/.sops.yaml"
     
     # Generate password hash
-    PASSWORD_HASH=$(echo "$PASSWORD" | mkpasswd -m sha-512 -s)
+    PASSWORD_HASH=$(mkpasswd -m sha-512 -s <<< "$PASSWORD")
     
-    # Create temporary SOPS file with password
+    # Create temporary SOPS file with password (restrict permissions to 600)
+    umask 077
     cat > "$CONFIG_DIR/minimal-config/secrets-temp.yaml" << EOF
 user-password: "$PASSWORD_HASH"
 EOF
+    umask 022
     
     # Encrypt the secrets file
     SOPS_AGE_RECIPIENTS="$AGE_KEY" sops -e "$CONFIG_DIR/minimal-config/secrets-temp.yaml" > "$CONFIG_DIR/minimal-config/secrets.yaml"

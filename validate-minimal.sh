@@ -121,7 +121,7 @@ if grep -q "REPLACE-WITH-" minimal-config/hardware.nix; then
     log_info "Hardware configuration contains placeholders (will be replaced during setup)"
 fi
 
-if grep -q "age1234567890abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklm" minimal-config/.sops.yaml; then
+if grep -q "$PLACEHOLDER_AGE_KEY" minimal-config/.sops.yaml; then
     log_info "SOPS configuration contains placeholder key (will be replaced during setup)"
 fi
 
